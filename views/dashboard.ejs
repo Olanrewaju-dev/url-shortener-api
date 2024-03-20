@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include("partials/head.ejs") %>
+  </head>
+  <body>
+    <header class="container">
+      <nav class="navbar navbar-expand-custom navbar-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">Scissors</a>
+          <ul class="nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/users/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+    <main class="container container-lg container-md container-sm">
+      <div class="mt-5">
+        <div>
+          <% if(user) {%>
+          <h3>Hello, <%= user.username %></h3>
+          <p>Welcome to your Scissors dashboard</p>
+          <% }%>
+        </div>
+
+        <form action="/users/dashboard" method="POST">
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Enter your URL here"
+              aria-label="Enter your URL here"
+              aria-describedby="button-addon2"
+              name="url"
+            />
+            <button class="btn btn-success" type="submit" id="button-addon2">
+              Shorten URL
+            </button>
+          </div>
+        </form>
+        <div>
+          <% if (data.existingShortUrl) { %>
+          <p><em>URL already exist:</em> <%= data.message %></p>
+          <% } %>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Original URL</th>
+              <th scope="col">Shortened URL</th>
+              <th scope="col">Clicks</th>
+              <th scope="col">Created at</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% data.forEach(function(item){ %>
+            <tr>
+              <td class="w-25">
+                <a href="<%= item.origUrl %>"><%= item.origUrl %></a>
+              </td>
+              <td>
+                <a href="<%= item.shortUrl %>"><%= item.shortUrl %></a>
+              </td>
+              <td><%= item.clicks %></td>
+              <td><%= item.createdAt %></td>
+              <td>
+                <div class="row">
+                  <form
+                    class="col"
+                    action="/users/dashboard/<%= item._id %>"
+                    method="POST"
+                  >
+                    <input type="hidden" value="finished" name="delete" />
+                    <button class="btn btn-danger" formmethod="post">
+                      Delete URL
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+    <footer><%- include("partials/footer.ejs") %></footer>
+  </body>
+</html>

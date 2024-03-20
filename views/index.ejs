@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include("partials/head.ejs") %>
+  </head>
+  <body>
+    <header class="container">
+      <nav class="navbar navbar-expand-custom navbar-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">Scissors</a>
+          <ul class="nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/users/login">Login</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+    <main class="container container-lg container-md container-sm">
+      <div class="mt-5">
+        <h1>Welcome to Scissors</h1>
+        <p>
+          A link shortener app that empowers you! A short link/URL is a handy
+          business digital paraphenalia. They are easy to read, share and
+          memorise. Start here, create a short URL for free.
+        </p>
+
+        <div>
+          <form action="/" method="POST" class="">
+            <div class="input-group mb-3">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Enter your URL here"
+                aria-label="Enter your URL here"
+                aria-describedby="button-addon2"
+                name="url"
+              />
+              <button class="btn btn-success" type="submit" id="button-addon2">
+                Shorten URL
+              </button>
+            </div>
+          </form>
+
+          <% if (data) { %>
+          <div>
+            <p><em>Your shortened URL:</em> <%= data %></p>
+          </div>
+          <% } else { %>
+          <div></div>
+          <% } %>
+        </div>
+
+        <div>
+          <h1>Want more? Try premium.</h1>
+          <p>
+            Custom short links, analytics and QR codes are available. Browser
+            extension, API access, app integrations and support are coming soon.
+          </p>
+          <button class="btn btn-success">
+            <a id="createAcc" href="/users/signup"> Create Account </a>
+          </button>
+        </div>
+      </div>
+    </main>
+    <footer><%- include("partials/footer.ejs") %></footer>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include("partials/head.ejs") %>
+  </head>
+  <body>
+    <header class="container">
+      <nav class="navbar navbar-expand-custom navbar-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">Scissors</a>
+          <ul class="nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/users/signup">Sign up</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+    <main class="container container-lg container-md container-sm">
+      <form class="mt-5 mx-auto w-80" action="/users/login" method="POST">
+        <h4>Login</h4>
+        <% if (typeof message !== 'undefined') { %>
+        <h3 class="errMessage"><%= message %></h3>
+        <% } %>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input
+            type="email"
+            class="form-control"
+            name="email"
+            placeholder="Input email here"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input
+            type="password"
+            class="form-control"
+            name="password"
+            placeholder="Input password here"
+            required
+          />
+          <div id="emailHelp" class="form-text">
+            Your password is secured with encryption.
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success">Login</button>
+      </form>
+    </main>
+    <footer><%- include("partials/footer.ejs") %></footer>
+  </body>
+</html>

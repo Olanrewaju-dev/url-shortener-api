@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { UserModel } from "./users.model";
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 interface LoginUserParams {
   email: string;
@@ -59,7 +60,8 @@ export const RegisterUser = async ({
 }: RegisterUserParams) => {
   try {
     const newUserInput = { email, password, username };
-
+    console.log(newUserInput);
+    console.log("I got here");
     // checking if user already exist
     const dbCheck = await UserModel.findOne({
       email: newUserInput.email,
@@ -86,6 +88,7 @@ export const RegisterUser = async ({
         process.env.JWT_SECRET || "",
         { expiresIn: "2h" }
       );
+      console.log("registration successful and jwt signed");
       return {
         message: "User registration successful",
         code: 201,

@@ -32,7 +32,6 @@ export const loginUserValidator = async (
   next: NextFunction
 ) => {
   try {
-    console.log("i got here - login validator");
     const schema = Joi.object({
       email: Joi.string().email().required(),
       password: Joi.string().min(6).required(),

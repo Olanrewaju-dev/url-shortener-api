@@ -1,33 +1,14 @@
 import { Request, Response } from "express";
-import { UserModel } from "./users.model";
-import { Login, RegisterUser } from "./users.service";
-import { ObjectId } from "mongodb";
 import { redisClient } from "../config/redisConfig";
-
-// user registration handler function
-export const createUser = async (req: Request, res: Response) => {
-  try {
-    // calling the RegisterUser function from user service
-    const response = await RegisterUser({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
-    });
-
-    if (response?.code == 201) {
-      res.cookie("jwt", response.token);
-      res.status(201).send({
-        message: response.message,
-        data: response.newUserObject,
-      });
-    }
-  } catch (err: any) {
-    res.send({
-      message: "An error has occurred",
-      error: err.message,
-    });
-  }
-};
+// importing models
+import { UrlModel } from "../url/url.model";
+import { UserModel } from "./users.model";
+// importing user services
+import { Login, RegisterUser } from "./users.service";
+// other imports
+import { ObjectId } from "mongodb";
+import shortId from "short-uuid";
+import { validateURL, isUrlBroken } from "../utils/utils";
 
 // get all users handler function
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -145,6 +126,125 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+// user dashboard handler function
+export const getDashboard = async (req: Request, res: Response) => {
+  try {
+    const urls = await UrlModel.find({ owner: res.locals.user._id });
+
+    res.render("dashboard", {
+      user: res.locals.user,
+      data: urls,
+    });
+  } catch (error: any) {
+    console.log(error.message);
+  }
+};
+
+export const createFreeUrl = async (req: Request, res: Response) => {
+  const origUrl = req.body.url;
+  // setting the base url
+  const base = process.env.URL_BASE || "https://localhost:3000";
+  // generating a random url id
+  const urlId = shortId.generate().slice(0, 6);
+  //performing a check on the original url to see if it is broken
+  let urlBrokenCheck = await isUrlBroken(origUrl);
+
+  // check if the original url is valid and not broken
+  if (validateURL(origUrl) && urlBrokenCheck === false) {
+    try {
+      const shortUrl = `${base}/${urlId}`;
+      const newUrlObj = await UrlModel.create({
+        origUrl,
+        shortUrl,
+        urlId,
+        clicks: 0,
+        date: new Date(),
+      });
+
+      res.render("index", { data: newUrlObj.shortUrl || null });
+    } catch (err: any) {
+      res.status(500).send({
+        message: err.message,
+      });
+    }
+  } else {
+    res.status(400).send({
+      message: "Invalid Original Url",
+    });
+  }
+};
+
+// user registration handler function
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    // calling the RegisterUser function from user service
+    const response = await RegisterUser({
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+    });
+
+    if (response?.code == 201) {
+      // set cookie for create account
+      res.cookie("jwt", response.token);
+      res.redirect("/users/login");
+    } else {
+      res.render("signup", { message: response.message });
+    }
+  } catch (err: any) {
+    res.send({
+      message: "An error has occurred",
+      error: err.message,
+    });
+  }
+};
+
+// user create short URL handler function
+export const userCreateUrl = async (req: Request, res: Response) => {
+  const origUrl = req.body.url;
+  // setting the base url
+  const base = process.env.URL_BASE || "https://localhost:3000";
+  // generating a random url id
+  const urlId = shortId.generate().slice(0, 6);
+  //performing a check on the original url to see if it is broken
+  let urlBrokenCheck = await isUrlBroken(origUrl);
+
+  // check if the original url is valid and not broken
+  if (validateURL(origUrl) && urlBrokenCheck === false) {
+    try {
+      // check db for existing url
+      let existingShortUrl = await UrlModel.findOne({ origUrl });
+      if (existingShortUrl) {
+        const data = {
+          message: "URL already exists",
+          data: existingShortUrl,
+        };
+        res.render("dashboard", { data: data || null });
+      } else {
+        let shortUrl = `${base}/${urlId}`;
+        const newUrlObj = await UrlModel.create({
+          origUrl,
+          shortUrl,
+          urlId,
+          clicks: 0,
+          owner: res.locals.user._id,
+        });
+        res.redirect("/users/dashboard");
+      }
+    } catch (err: any) {
+      res.status(500).send({
+        message: err.message,
+      });
+    }
+  } else {
+    const data = {
+      message: "Invalid Original Url",
+      code: 400,
+    };
+    res.render("error", { data: data });
+  }
+};
+
 // user login handler function
 export const loginUser = async (req: Request, res: Response) => {
   try {
@@ -153,12 +253,12 @@ export const loginUser = async (req: Request, res: Response) => {
       password: req.body.password,
     });
     if (response.code == 200) {
+      // set cookie for user login
       res.cookie("jwt", response.data?.token);
-      console.log("user login successful", response.data?.token);
-      res.send({
-        message: response.message,
-        status: response.code,
-      });
+      res.redirect("/users/dashboard");
+    } else {
+      const message = "Invalid email or password";
+      res.render("login.ejs", { message });
     }
   } catch (error: any) {
     res.status(500).send({
@@ -172,13 +272,30 @@ export const loginUser = async (req: Request, res: Response) => {
 export const logoutUser = async (req: Request, res: Response) => {
   try {
     res.clearCookie("jwt");
-    res.status(200).send({
-      message: "User logged out successfully",
-    });
+    res.redirect("/users/login");
   } catch (error: any) {
     res.status(500).send({
       message: "Internal server error",
       error: error.message,
+    });
+  }
+};
+
+// POST Delete the URL
+export const deleteURL = async (req: Request, res: Response) => {
+  try {
+    const urlId = req.params.id;
+    const deletePayLoad = req.body.delete;
+    if (deletePayLoad) {
+      const deletedUrl = await UrlModel.findByIdAndDelete(urlId);
+      if (deletedUrl) {
+        res.redirect("/users/dashboard");
+      }
+    }
+  } catch (err: any) {
+    res.send({
+      message: err.message,
+      code: 500,
     });
   }
 };

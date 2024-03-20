@@ -4,19 +4,47 @@ import {
   createUserValidator,
   loginUserValidator,
 } from "../middlewares/inputValidator";
+import { getCookie } from "../middlewares/authJWT";
+import { freeRateLimiter } from "../middlewares/rateLimiter";
+import cookieParser from "cookie-parser";
 
 function userRoutes(app: Express) {
-  // get all users
-  app.get("/users", usersController.getAllUsers);
+  // cookie parser
+  app.use(cookieParser());
 
-  // create a user in the database
-  app.post("/users", createUserValidator, usersController.createUser);
+  // create a short URL from the homepage
+  app.post("/", freeRateLimiter, usersController.createFreeUrl);
 
-  // login a user
+  // GET get all users
+  app.get("/users", getCookie, usersController.getAllUsers);
+
+  // POST create a user in the database
+  app.post("/users/signup", createUserValidator, usersController.createUser);
+
+  // POST login a user
   app.post("/users/login", loginUserValidator, usersController.loginUser);
 
+  // GET dashboard
+  app.get("/users/dashboard", getCookie, usersController.getDashboard);
+
+  // POST a user creates new shortened URL
+  app.post("/users/dashboard", getCookie, usersController.userCreateUrl);
+
+  // POST delete a user
+  app.post("/users/dashboard/:id", getCookie, usersController.deleteURL);
+
+  // GET login page
+  app.get("/users/login", (req, res) => {
+    res.render("login.ejs");
+  });
+
+  // signup page
+  app.get("/users/signup", (req, res) => {
+    res.render("signup.ejs");
+  });
+
   // logout user
-  app.post("/users/logout", usersController.logoutUser);
+  app.get("/users/logout", getCookie, usersController.logoutUser);
 
   // get one user
   app.get("/users/:id", usersController.getOneUser);
