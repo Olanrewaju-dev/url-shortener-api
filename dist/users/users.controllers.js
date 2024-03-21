@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteURL = exports.logoutUser = exports.loginUser = exports.userCreateUrl = exports.createUser = exports.createFreeUrl = exports.getDashboard = exports.deleteUser = exports.updateUser = exports.getOneUser = exports.getAllUsers = void 0;
+exports.deleteURL = exports.logoutUser = exports.loginUser = exports.userCreateUrl = exports.createUser = exports.redirectToOriginalUrl = exports.createFreeUrl = exports.getDashboard = exports.deleteUser = exports.updateUser = exports.getOneUser = exports.getAllUsers = void 0;
 const redisConfig_1 = require("../config/redisConfig");
 // importing models
 const url_model_1 = require("../url/url.model");
@@ -23,6 +23,8 @@ const users_service_1 = require("./users.service");
 const mongodb_1 = require("mongodb");
 const short_uuid_1 = __importDefault(require("short-uuid"));
 const utils_1 = require("../utils/utils");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 // get all users handler function
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -149,39 +151,68 @@ const getDashboard = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getDashboard = getDashboard;
 const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const origUrl = req.body.url;
-    // setting the base url
-    const base = process.env.URL_BASE;
-    // generating a random url id
-    const urlId = short_uuid_1.default.generate().slice(0, 6);
-    //performing a check on the original url to see if it is broken
-    let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrl);
-    // check if the original url is valid and not broken
-    if ((0, utils_1.validateURL)(origUrl) && urlBrokenCheck === false) {
-        try {
-            const shortUrl = `${base}/${urlId}`;
-            const newUrlObj = yield url_model_1.UrlModel.create({
-                origUrl,
-                shortUrl,
-                urlId,
-                clicks: 0,
-                date: new Date(),
-            });
-            res.render("index", { data: newUrlObj.shortUrl || null });
-        }
-        catch (err) {
-            res.status(500).send({
-                message: err.message,
-            });
-        }
+    const origUrlFromReq = req.body.url;
+    // checking for the original url in db
+    const existingShortUrl = yield url_model_1.UrlModel.findOne({
+        origUrl: { $in: origUrlFromReq },
+    });
+    if (existingShortUrl) {
+        console.log("Original url already exist");
+        res.render("index", { data: existingShortUrl.shortUrl || null });
     }
     else {
-        res.status(400).send({
-            message: "Invalid Original Url",
-        });
+        // setting the base url
+        const base = process.env.URL_BASE;
+        // generating a random url id
+        const urlId = short_uuid_1.default.generate().slice(0, 6);
+        //performing a check on the original url to see if it is broken
+        let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrlFromReq);
+        // check if the original url is valid and not broken
+        if ((0, utils_1.validateURL)(origUrlFromReq) && urlBrokenCheck === false) {
+            try {
+                const shortUrl = `${base}/${urlId}`;
+                const newUrlObj = yield url_model_1.UrlModel.create({
+                    origUrlFromReq,
+                    shortUrl,
+                    urlId,
+                    clicks: 0,
+                    date: new Date(),
+                });
+                res.render("index", { data: newUrlObj.shortUrl || null });
+            }
+            catch (err) {
+                res.status(500).send({
+                    message: err.message,
+                });
+            }
+        }
+        else {
+            res.status(400).send({
+                message: "Invalid Original Url",
+            });
+        }
     }
 });
 exports.createFreeUrl = createFreeUrl;
+// redirect to original url handler function
+const redirectToOriginalUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { redirectToOrigUrl } = req.params;
+    console.log("i got here - redirectToOrignalUrl");
+    try {
+        const shortUrl = yield url_model_1.UrlModel.findOne({ urlId: { redirectToOrigUrl } });
+        if (!shortUrl) {
+            res.status(404).send("Original URL not found");
+        }
+        if (shortUrl !== null) {
+            res.redirect(shortUrl.origUrl);
+        }
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+exports.redirectToOriginalUrl = redirectToOriginalUrl;
 // user registration handler function
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

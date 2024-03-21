@@ -36,6 +36,8 @@ function userRoutes(app) {
     app.use((0, cookie_parser_1.default)());
     // create a short URL from the homepage
     app.post("/", rateLimiter_1.freeRateLimiter, usersController.createFreeUrl);
+    // redirector route
+    app.get("/:id", usersController.redirectToOriginalUrl);
     // GET get all users
     app.get("/users", authJWT_1.getCookie, usersController.getAllUsers);
     // POST create a user in the database

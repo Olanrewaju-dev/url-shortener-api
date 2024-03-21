@@ -7,7 +7,6 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const dbConfig_1 = __importDefault(require("./config/dbConfig"));
 const users_routes_1 = __importDefault(require("./users/users.routes"));
-const url_routes_1 = __importDefault(require("./url/url.routes"));
 const redisConfig_1 = require("./config/redisConfig");
 dotenv_1.default.config();
 dbConfig_1.default.connectToMongoDB(); // connecting to db
@@ -24,7 +23,6 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // routes
 (0, users_routes_1.default)(app);
-(0, url_routes_1.default)(app);
 const shortUrl = "";
 // Root route
 app.get("/", (req, res) => {

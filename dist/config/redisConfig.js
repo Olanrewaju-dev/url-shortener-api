@@ -4,8 +4,10 @@ exports.redisClient = void 0;
 const redis_1 = require("redis");
 require("dotenv").config();
 exports.redisClient = (0, redis_1.createClient)({
+    password: process.env.REDIS_PASSWORD,
     socket: {
-        port: parseInt(process.env.REDIS_PORT || "6379"),
+        host: process.env.REDIS_HOST,
+        port: 18017,
     },
 });
 exports.redisClient.on("error", (err) => console.log("Redis Client Error", err));

@@ -15,6 +15,9 @@ function userRoutes(app: Express) {
   // create a short URL from the homepage
   app.post("/", freeRateLimiter, usersController.createFreeUrl);
 
+  // redirector route
+  app.get("/:id", usersController.redirectToOriginalUrl);
+
   // GET get all users
   app.get("/users", getCookie, usersController.getAllUsers);
 

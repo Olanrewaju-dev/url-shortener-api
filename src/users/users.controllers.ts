@@ -9,6 +9,8 @@ import { Login, RegisterUser } from "./users.service";
 import { ObjectId } from "mongodb";
 import shortId from "short-uuid";
 import { validateURL, isUrlBroken } from "../utils/utils";
+import dotenv from "dotenv";
+dotenv.config();
 
 // get all users handler function
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -141,36 +143,65 @@ export const getDashboard = async (req: Request, res: Response) => {
 };
 
 export const createFreeUrl = async (req: Request, res: Response) => {
-  const origUrl = req.body.url;
-  // setting the base url
-  const base = process.env.URL_BASE;
-  // generating a random url id
-  const urlId = shortId.generate().slice(0, 6);
-  //performing a check on the original url to see if it is broken
-  let urlBrokenCheck = await isUrlBroken(origUrl);
+  const origUrlFromReq = req.body.url;
+  // checking for the original url in db
+  const existingShortUrl = await UrlModel.findOne({
+    origUrl: { $in: origUrlFromReq },
+  });
+  if (existingShortUrl) {
+    console.log("Original url already exist");
+    res.render("index", { data: existingShortUrl.shortUrl || null });
+  } else {
+    // setting the base url
+    const base = process.env.URL_BASE;
+    // generating a random url id
+    const urlId = shortId.generate().slice(0, 6);
+    //performing a check on the original url to see if it is broken
+    let urlBrokenCheck = await isUrlBroken(origUrlFromReq);
 
-  // check if the original url is valid and not broken
-  if (validateURL(origUrl) && urlBrokenCheck === false) {
-    try {
-      const shortUrl = `${base}/${urlId}`;
-      const newUrlObj = await UrlModel.create({
-        origUrl,
-        shortUrl,
-        urlId,
-        clicks: 0,
-        date: new Date(),
-      });
+    // check if the original url is valid and not broken
+    if (validateURL(origUrlFromReq) && urlBrokenCheck === false) {
+      try {
+        const shortUrl = `${base}/${urlId}`;
+        const newUrlObj = await UrlModel.create({
+          origUrlFromReq,
+          shortUrl,
+          urlId,
+          clicks: 0,
+          date: new Date(),
+        });
 
-      res.render("index", { data: newUrlObj.shortUrl || null });
-    } catch (err: any) {
-      res.status(500).send({
-        message: err.message,
+        res.render("index", { data: newUrlObj.shortUrl || null });
+      } catch (err: any) {
+        res.status(500).send({
+          message: err.message,
+        });
+      }
+    } else {
+      res.status(400).send({
+        message: "Invalid Original Url",
       });
     }
-  } else {
-    res.status(400).send({
-      message: "Invalid Original Url",
-    });
+  }
+};
+
+// redirect to original url handler function
+export const redirectToOriginalUrl = async (req: Request, res: Response) => {
+  const { redirectToOrigUrl } = req.params;
+  console.log("i got here - redirectToOrignalUrl");
+
+  try {
+    const shortUrl = await UrlModel.findOne({ urlId: { redirectToOrigUrl } });
+    if (!shortUrl) {
+      res.status(404).send("Original URL not found");
+    }
+
+    if (shortUrl !== null) {
+      res.redirect(shortUrl.origUrl);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
   }
 };
 

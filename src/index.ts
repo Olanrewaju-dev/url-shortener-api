@@ -2,7 +2,6 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import db from "./config/dbConfig";
 import userRoutes from "./users/users.routes";
-import urlRoutes from "./url/url.routes";
 import { redisClient } from "./config/redisConfig";
 dotenv.config();
 
@@ -25,7 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 userRoutes(app);
-urlRoutes(app);
 
 const shortUrl = "";
 // Root route
