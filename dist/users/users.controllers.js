@@ -151,7 +151,7 @@ exports.getDashboard = getDashboard;
 const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const origUrl = req.body.url;
     // setting the base url
-    const base = process.env.URL_BASE || "https://localhost:3000";
+    const base = process.env.URL_BASE;
     // generating a random url id
     const urlId = short_uuid_1.default.generate().slice(0, 6);
     //performing a check on the original url to see if it is broken

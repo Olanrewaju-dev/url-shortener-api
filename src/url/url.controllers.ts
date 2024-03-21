@@ -47,7 +47,7 @@ export const redirectToOriginalUrl = async (req: Request, res: Response) => {
   console.log("i got here - redirectToOrignalUrl");
 
   try {
-    const shortUrl = await UrlModel.findOne({ shortCode });
+    const shortUrl = await UrlModel.findOne({ urlId: { shortCode } });
     if (!shortUrl) {
       return res.status(404).send("Short URL not found");
     }

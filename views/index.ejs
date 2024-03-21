@@ -44,7 +44,9 @@
 
           <% if (data) { %>
           <div>
-            <p><em>Your shortened URL:</em> <%= data %></p>
+            <p>
+              <em>Your shortened URL:</em> <a href="<%= data %>"><%= data %></a>
+            </p>
           </div>
           <% } else { %>
           <div></div>

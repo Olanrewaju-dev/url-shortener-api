@@ -56,7 +56,7 @@ const redirectToOriginalUrl = (req, res) => __awaiter(void 0, void 0, void 0, fu
     const shortCode = req.params.shortCode;
     console.log("i got here - redirectToOrignalUrl");
     try {
-        const shortUrl = yield url_model_1.UrlModel.findOne({ shortCode });
+        const shortUrl = yield url_model_1.UrlModel.findOne({ urlId: { shortCode } });
         if (!shortUrl) {
             return res.status(404).send("Short URL not found");
         }
