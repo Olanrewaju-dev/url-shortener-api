@@ -36,8 +36,6 @@ function userRoutes(app) {
     app.use((0, cookie_parser_1.default)());
     // create a short URL from the homepage
     app.post("/", rateLimiter_1.freeRateLimiter, usersController.createFreeUrl);
-    // redirector route
-    app.get("/:id", usersController.redirectToOriginalUrl);
     // GET get all users
     app.get("/users", authJWT_1.getCookie, usersController.getAllUsers);
     // POST create a user in the database
@@ -48,8 +46,6 @@ function userRoutes(app) {
     app.get("/users/dashboard", authJWT_1.getCookie, usersController.getDashboard);
     // POST a user creates new shortened URL
     app.post("/users/dashboard", authJWT_1.getCookie, usersController.userCreateUrl);
-    // POST delete a user
-    app.post("/users/dashboard/:id", authJWT_1.getCookie, usersController.deleteURL);
     // GET login page
     app.get("/users/login", (req, res) => {
         res.render("login.ejs");
@@ -60,6 +56,10 @@ function userRoutes(app) {
     });
     // logout user
     app.get("/users/logout", authJWT_1.getCookie, usersController.logoutUser);
+    // POST delete a user
+    app.post("/users/dashboard/:id", authJWT_1.getCookie, usersController.deleteURL);
+    // redirector route
+    app.get("/:id", usersController.redirectToOriginalUrl);
     // get one user
     app.get("/users/:id", usersController.getOneUser);
     // put/update a user

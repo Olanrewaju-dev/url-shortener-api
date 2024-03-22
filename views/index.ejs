@@ -35,6 +35,7 @@
                 aria-label="Enter your URL here"
                 aria-describedby="button-addon2"
                 name="url"
+                required
               />
               <button class="btn btn-success" type="submit" id="button-addon2">
                 Shorten URL
@@ -42,7 +43,7 @@
             </div>
           </form>
 
-          <% if (data) { %>
+          <% if (locals.data) { %>
           <div>
             <p>
               <em>Your shortened URL:</em> <a href="<%= data %>"><%= data %></a>

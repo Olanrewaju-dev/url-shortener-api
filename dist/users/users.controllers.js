@@ -157,12 +157,11 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         origUrl: { $in: origUrlFromReq },
     });
     if (existingShortUrl) {
-        console.log("Original url already exist");
-        res.render("index", { data: existingShortUrl.shortUrl || null });
+        res.render("index", { data: existingShortUrl.shortUrl });
     }
     else {
         // setting the base url
-        const base = process.env.URL_BASE;
+        const base = process.env.URL_BASE || "http://localhost:3000";
         // generating a random url id
         const urlId = short_uuid_1.default.generate().slice(0, 6);
         //performing a check on the original url to see if it is broken
@@ -172,7 +171,7 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             try {
                 const shortUrl = `${base}/${urlId}`;
                 const newUrlObj = yield url_model_1.UrlModel.create({
-                    origUrlFromReq,
+                    origUrl: origUrlFromReq,
                     shortUrl,
                     urlId,
                     clicks: 0,
@@ -196,15 +195,14 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createFreeUrl = createFreeUrl;
 // redirect to original url handler function
 const redirectToOriginalUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { redirectToOrigUrl } = req.params;
-    console.log("i got here - redirectToOrignalUrl");
+    const shortId = req.params.id;
     try {
-        const shortUrl = yield url_model_1.UrlModel.findOne({ urlId: { redirectToOrigUrl } });
-        if (!shortUrl) {
+        const result = yield url_model_1.UrlModel.findOne({ urlId: { $in: shortId } });
+        if (!result) {
             res.status(404).send("Original URL not found");
         }
-        if (shortUrl !== null) {
-            res.redirect(shortUrl.origUrl);
+        else {
+            res.redirect(result.origUrl);
         }
     }
     catch (error) {

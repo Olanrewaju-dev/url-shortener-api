@@ -15,9 +15,6 @@ function userRoutes(app: Express) {
   // create a short URL from the homepage
   app.post("/", freeRateLimiter, usersController.createFreeUrl);
 
-  // redirector route
-  app.get("/:id", usersController.redirectToOriginalUrl);
-
   // GET get all users
   app.get("/users", getCookie, usersController.getAllUsers);
 
@@ -33,9 +30,6 @@ function userRoutes(app: Express) {
   // POST a user creates new shortened URL
   app.post("/users/dashboard", getCookie, usersController.userCreateUrl);
 
-  // POST delete a user
-  app.post("/users/dashboard/:id", getCookie, usersController.deleteURL);
-
   // GET login page
   app.get("/users/login", (req, res) => {
     res.render("login.ejs");
@@ -48,6 +42,12 @@ function userRoutes(app: Express) {
 
   // logout user
   app.get("/users/logout", getCookie, usersController.logoutUser);
+
+  // POST delete a user
+  app.post("/users/dashboard/:id", getCookie, usersController.deleteURL);
+
+  // redirector route
+  app.get("/:id", usersController.redirectToOriginalUrl);
 
   // get one user
   app.get("/users/:id", usersController.getOneUser);
