@@ -161,7 +161,7 @@ export const createFreeUrl = async (req: Request, res: Response) => {
     // check if the original url is valid and not broken
     if (validateURL(origUrlFromReq) && urlBrokenCheck === false) {
       try {
-        const shortUrl = `${base}/${urlId}`;
+        const shortUrl = `${base}${urlId}`;
         const newUrlObj = await UrlModel.create({
           origUrl: origUrlFromReq,
           shortUrl,
@@ -247,7 +247,7 @@ export const userCreateUrl = async (req: Request, res: Response) => {
         };
         res.render("dashboard", { data: data || null });
       } else {
-        let shortUrl = `${base}/${urlId}`;
+        let shortUrl = `${base}${urlId}`;
         const newUrlObj = await UrlModel.create({
           origUrl,
           shortUrl,
