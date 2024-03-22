@@ -169,7 +169,7 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // check if the original url is valid and not broken
         if ((0, utils_1.validateURL)(origUrlFromReq) && urlBrokenCheck === false) {
             try {
-                const shortUrlId = `${base}/${urlId}`;
+                const shortUrlId = `${base}${urlId}`;
                 const newUrlObj = yield url_model_1.UrlModel.create({
                     origUrl: origUrlFromReq,
                     shortUrl: shortUrlId,

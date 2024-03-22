@@ -161,7 +161,7 @@ export const createFreeUrl = async (req: Request, res: Response) => {
     // check if the original url is valid and not broken
     if (validateURL(origUrlFromReq) && urlBrokenCheck === false) {
       try {
-        const shortUrlId = `${base}/${urlId}`;
+        const shortUrlId = `${base}${urlId}`;
         const newUrlObj = await UrlModel.create({
           origUrl: origUrlFromReq,
           shortUrl: shortUrlId,
