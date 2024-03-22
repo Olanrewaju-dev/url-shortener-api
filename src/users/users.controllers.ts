@@ -161,10 +161,10 @@ export const createFreeUrl = async (req: Request, res: Response) => {
     // check if the original url is valid and not broken
     if (validateURL(origUrlFromReq) && urlBrokenCheck === false) {
       try {
-        const shortUrl = `${base}${urlId}`;
+        const shortUrlId = `${base}/${urlId}`;
         const newUrlObj = await UrlModel.create({
           origUrl: origUrlFromReq,
-          shortUrl,
+          shortUrl: shortUrlId,
           urlId,
           clicks: 0,
           date: new Date(),
@@ -227,19 +227,21 @@ export const createUser = async (req: Request, res: Response) => {
 
 // user create short URL handler function
 export const userCreateUrl = async (req: Request, res: Response) => {
-  const origUrl = req.body.url;
+  const origUrlPayload = req.body.url;
   // setting the base url
   const base = process.env.URL_BASE || "https://localhost:3000";
   // generating a random url id
   const urlId = shortId.generate().slice(0, 6);
   //performing a check on the original url to see if it is broken
-  let urlBrokenCheck = await isUrlBroken(origUrl);
+  let urlBrokenCheck = await isUrlBroken(origUrlPayload);
 
   // check if the original url is valid and not broken
-  if (validateURL(origUrl) && urlBrokenCheck === false) {
+  if (validateURL(origUrlPayload) && urlBrokenCheck === false) {
     try {
       // check db for existing url
-      let existingShortUrl = await UrlModel.findOne({ origUrl });
+      let existingShortUrl = await UrlModel.findOne({
+        origUrl: origUrlPayload,
+      });
       if (existingShortUrl) {
         const data = {
           message: "URL already exists",
@@ -247,10 +249,10 @@ export const userCreateUrl = async (req: Request, res: Response) => {
         };
         res.render("dashboard", { data: data || null });
       } else {
-        let shortUrl = `${base}${urlId}`;
-        const newUrlObj = await UrlModel.create({
-          origUrl,
-          shortUrl,
+        let shortUrlId = `${base}${urlId}`;
+        await UrlModel.create({
+          origUrl: origUrlPayload,
+          shortUrl: shortUrlId,
           urlId,
           clicks: 0,
           owner: res.locals.user._id,

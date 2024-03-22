@@ -169,10 +169,10 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // check if the original url is valid and not broken
         if ((0, utils_1.validateURL)(origUrlFromReq) && urlBrokenCheck === false) {
             try {
-                const shortUrl = `${base}/${urlId}`;
+                const shortUrlId = `${base}/${urlId}`;
                 const newUrlObj = yield url_model_1.UrlModel.create({
                     origUrl: origUrlFromReq,
-                    shortUrl,
+                    shortUrl: shortUrlId,
                     urlId,
                     clicks: 0,
                     date: new Date(),
@@ -239,18 +239,20 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.createUser = createUser;
 // user create short URL handler function
 const userCreateUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const origUrl = req.body.url;
+    const origUrlPayload = req.body.url;
     // setting the base url
     const base = process.env.URL_BASE || "https://localhost:3000";
     // generating a random url id
     const urlId = short_uuid_1.default.generate().slice(0, 6);
     //performing a check on the original url to see if it is broken
-    let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrl);
+    let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrlPayload);
     // check if the original url is valid and not broken
-    if ((0, utils_1.validateURL)(origUrl) && urlBrokenCheck === false) {
+    if ((0, utils_1.validateURL)(origUrlPayload) && urlBrokenCheck === false) {
         try {
             // check db for existing url
-            let existingShortUrl = yield url_model_1.UrlModel.findOne({ origUrl });
+            let existingShortUrl = yield url_model_1.UrlModel.findOne({
+                origUrl: origUrlPayload,
+            });
             if (existingShortUrl) {
                 const data = {
                     message: "URL already exists",
@@ -259,10 +261,10 @@ const userCreateUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 res.render("dashboard", { data: data || null });
             }
             else {
-                let shortUrl = `${base}/${urlId}`;
-                const newUrlObj = yield url_model_1.UrlModel.create({
-                    origUrl,
-                    shortUrl,
+                let shortUrlId = `${base}${urlId}`;
+                yield url_model_1.UrlModel.create({
+                    origUrl: origUrlPayload,
+                    shortUrl: shortUrlId,
                     urlId,
                     clicks: 0,
                     owner: res.locals.user._id,
