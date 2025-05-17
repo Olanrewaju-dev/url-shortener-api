@@ -60,8 +60,6 @@ export const RegisterUser = async ({
 }: RegisterUserParams) => {
   try {
     const newUserInput = { email, password, username };
-    console.log(newUserInput);
-    console.log("I got here");
     // checking if user already exist
     const dbCheck = await UserModel.findOne({
       email: newUserInput.email,
@@ -88,7 +86,7 @@ export const RegisterUser = async ({
         process.env.JWT_SECRET || "",
         { expiresIn: "2h" }
       );
-      console.log("registration successful and jwt signed");
+
       return {
         message: "User registration successful",
         code: 201,
@@ -102,6 +100,10 @@ export const RegisterUser = async ({
       code: 500,
     };
   } catch (err: any) {
-    throw new Error(err.message);
+    return {
+      message: err.message,
+      code: 500,
+      data: [],
+    };
   }
 };

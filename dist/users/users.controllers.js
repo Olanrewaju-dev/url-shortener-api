@@ -63,9 +63,10 @@ const getOneUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // checking if users are cached before making call to DB
         const cachedUser = yield redisConfig_1.redisClient.get(`${userID}`);
         if (cachedUser) {
+            const user = yield JSON.parse(cachedUser);
             res.status(200).send({
                 message: "Cache hit. User successfully retrieved.",
-                data: JSON.parse(cachedUser),
+                data: user,
             });
             return;
         }
@@ -164,12 +165,14 @@ const createFreeUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const base = process.env.URL_BASE || "http://localhost:3000";
         // generating a random url id
         const urlId = short_uuid_1.default.generate().slice(0, 6);
+        // checking if url is valid
+        const isValidUrl = yield (0, utils_1.validateURL)(origUrlFromReq);
         //performing a check on the original url to see if it is broken
-        let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrlFromReq);
+        // let urlBrokenCheck = await isUrlBroken(origUrlFromReq);
         // check if the original url is valid and not broken
-        if ((0, utils_1.validateURL)(origUrlFromReq) && urlBrokenCheck === false) {
+        if (isValidUrl) {
             try {
-                const shortUrlId = `${base}${urlId}`;
+                const shortUrlId = `${base}/${urlId}`;
                 const newUrlObj = yield url_model_1.UrlModel.create({
                     origUrl: origUrlFromReq,
                     shortUrl: shortUrlId,
@@ -226,13 +229,14 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.redirect("/users/login");
         }
         else {
-            res.render("signup", { message: response.message });
+            res.locals.message = response.message;
+            res.render("signup", { message: res.locals.message });
         }
     }
     catch (err) {
         res.send({
-            message: "An error has occurred",
-            error: err.message,
+            message: err.message,
+            data: [],
         });
     }
 });
@@ -244,10 +248,12 @@ const userCreateUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const base = process.env.URL_BASE || "https://localhost:3000";
     // generating a random url id
     const urlId = short_uuid_1.default.generate().slice(0, 6);
+    // checking if url is valid
+    const isValidUrl = yield (0, utils_1.validateURL)(origUrlPayload);
     //performing a check on the original url to see if it is broken
     let urlBrokenCheck = yield (0, utils_1.isUrlBroken)(origUrlPayload);
     // check if the original url is valid and not broken
-    if ((0, utils_1.validateURL)(origUrlPayload) && urlBrokenCheck === false) {
+    if (isValidUrl && !urlBrokenCheck) {
         try {
             // check db for existing url
             let existingShortUrl = yield url_model_1.UrlModel.findOne({

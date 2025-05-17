@@ -49,8 +49,6 @@ exports.Login = Login;
 const RegisterUser = (_b) => __awaiter(void 0, [_b], void 0, function* ({ email, password, username, }) {
     try {
         const newUserInput = { email, password, username };
-        console.log(newUserInput);
-        console.log("I got here");
         // checking if user already exist
         const dbCheck = yield users_model_1.UserModel.findOne({
             email: newUserInput.email,
@@ -70,7 +68,6 @@ const RegisterUser = (_b) => __awaiter(void 0, [_b], void 0, function* ({ email,
         });
         if (newUserObject) {
             const token = jsonwebtoken_1.default.sign({ email: newUserObject.email }, process.env.JWT_SECRET || "", { expiresIn: "2h" });
-            console.log("registration successful and jwt signed");
             return {
                 message: "User registration successful",
                 code: 201,
@@ -84,7 +81,11 @@ const RegisterUser = (_b) => __awaiter(void 0, [_b], void 0, function* ({ email,
         };
     }
     catch (err) {
-        throw new Error(err.message);
+        return {
+            message: err.message,
+            code: 500,
+            data: [],
+        };
     }
 });
 exports.RegisterUser = RegisterUser;

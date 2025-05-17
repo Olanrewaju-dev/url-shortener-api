@@ -16,8 +16,12 @@ exports.isUrlBroken = exports.validateURL = void 0;
 const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
 function validateURL(value) {
-    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-    return urlRegex.test(value);
+    return __awaiter(this, void 0, void 0, function* () {
+        const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+        const result = yield urlRegex.test(value);
+        console.log("URL validation result:", result);
+        return result;
+    });
 }
 exports.validateURL = validateURL;
 // validate user provided url is not broken
@@ -27,22 +31,20 @@ function isUrlBroken(url) {
         const client = url.startsWith("https") ? https_1.default : http_1.default;
         try {
             const response = yield new Promise((resolve, reject) => {
-                client.get(url, resolve).on("error", reject);
+                const request = client.get(url, resolve);
+                request.on("error", reject);
+                request.setTimeout(5000, () => {
+                    request.abort();
+                    reject(new Error("Request timed out"));
+                });
             });
             // Check the response status code
-            if (response.statusCode &&
+            return !(response.statusCode &&
                 response.statusCode >= 200 &&
-                response.statusCode < 400) {
-                console.log("URL is not broken");
-                return false; // URL is not broken
-            }
-            else {
-                console.log("URL is broken");
-                return true; // URL is broken
-            }
+                response.statusCode < 400);
         }
         catch (err) {
-            console.error("Error checking URL:", err);
+            console.error("Error checking URL:", err.message || err);
             return true; // Error occurred, so URL is considered broken
         }
     });

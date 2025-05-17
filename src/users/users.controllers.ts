@@ -50,9 +50,10 @@ export const getOneUser = async (req: Request, res: Response) => {
     // checking if users are cached before making call to DB
     const cachedUser = await redisClient.get(`${userID}`);
     if (cachedUser) {
+      const user = await JSON.parse(cachedUser);
       res.status(200).send({
         message: "Cache hit. User successfully retrieved.",
-        data: JSON.parse(cachedUser),
+        data: user,
       });
       return;
     }
@@ -155,13 +156,17 @@ export const createFreeUrl = async (req: Request, res: Response) => {
     const base = process.env.URL_BASE || "http://localhost:3000";
     // generating a random url id
     const urlId = shortId.generate().slice(0, 6);
+
+    // checking if url is valid
+    const isValidUrl = await validateURL(origUrlFromReq);
+
     //performing a check on the original url to see if it is broken
-    let urlBrokenCheck = await isUrlBroken(origUrlFromReq);
+    // let urlBrokenCheck = await isUrlBroken(origUrlFromReq);
 
     // check if the original url is valid and not broken
-    if (validateURL(origUrlFromReq) && urlBrokenCheck === false) {
+    if (isValidUrl) {
       try {
-        const shortUrlId = `${base}${urlId}`;
+        const shortUrlId = `${base}/${urlId}`;
         const newUrlObj = await UrlModel.create({
           origUrl: origUrlFromReq,
           shortUrl: shortUrlId,
@@ -215,12 +220,13 @@ export const createUser = async (req: Request, res: Response) => {
       res.cookie("jwt", response.token);
       res.redirect("/users/login");
     } else {
-      res.render("signup", { message: response.message });
+      res.locals.message = response.message;
+      res.render("signup", { message: res.locals.message });
     }
   } catch (err: any) {
     res.send({
-      message: "An error has occurred",
-      error: err.message,
+      message: err.message,
+      data: [],
     });
   }
 };
@@ -232,11 +238,15 @@ export const userCreateUrl = async (req: Request, res: Response) => {
   const base = process.env.URL_BASE || "https://localhost:3000";
   // generating a random url id
   const urlId = shortId.generate().slice(0, 6);
+
+  // checking if url is valid
+  const isValidUrl = await validateURL(origUrlPayload);
+
   //performing a check on the original url to see if it is broken
   let urlBrokenCheck = await isUrlBroken(origUrlPayload);
 
   // check if the original url is valid and not broken
-  if (validateURL(origUrlPayload) && urlBrokenCheck === false) {
+  if (isValidUrl && !urlBrokenCheck) {
     try {
       // check db for existing url
       let existingShortUrl = await UrlModel.findOne({

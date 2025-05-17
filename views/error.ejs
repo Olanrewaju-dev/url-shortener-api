@@ -18,9 +18,9 @@
     </header>
     <main class="container container-lg container-md container-sm">
       <div>
-        <% data.forEach(function(item){ %>
-        <h1>Error <%= item.code %></h1>
-        <p><%= item.message %></p>
+        <% data.forEach(function(err){ %>
+        <h1>Error <%= err.code %></h1>
+        <p><%= err.message %></p>
         <% }); %>
       </div>
       <button class="btn btn-success">

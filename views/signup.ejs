@@ -20,8 +20,13 @@
       <form class="mt-5 mx-auto w-80" action="/users/signup" method="POST">
         <h4>Create account</h4>
         <p>Fill your details below:</p>
-        <% if (typeof message !== 'undefined') { %>
-        <h3 class="errMessage"><%= message %></h3>
+        <% if (locals.message) { %>
+        <p class="errMessage">Error: <%= message %></p>
+        <script>
+          setTimeout(() => {
+            document.querySelector(".errMessage").style.display = "none";
+          }, 5000);
+        </script>
         <% } %>
         <div class="mb-3">
           <label for="username" class="form-label">Username</label>
